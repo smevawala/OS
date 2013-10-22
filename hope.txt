@@ -1,0 +1,53 @@
+Got here
+Executing command ls with argument "-l ."
+total 332
+-rwxrwxr-x 1 shivam shivam  14243 Oct  9 14:14 a.out
+-rw------- 1 shivam shivam      0 Oct  4 21:24 -b
+-rw------- 1 shivam shivam   1211 Oct  4 21:24 bad_copycat.c
+-rw------- 1 shivam shivam     31 Oct  4 21:24 bitch.txt
+-rw-r--r-- 1 shivam shivam   3438 Oct  4 21:24 copycat.c
+-rw-r--r-- 1 shivam shivam      0 Oct 19 16:41 createdright.txt
+-rwxr-xr-x 1 shivam shivam 206673 Oct  4 21:24 dic.txt
+-rw-r--r-- 1 shivam shivam     31 Oct  4 21:24 fag
+-rw-r--r-- 1 shivam shivam      8 Oct  4 21:24 gay
+--w-r----- 1 root   root      132 Oct  4 21:24 hello.txt
+---------- 1 root   root       47 Oct  4 21:24 hell.txt
+-rw-r--r-- 1 shivam shivam     51 Oct 19 17:00 hope.txt
+-rw-r--r-- 1 shivam shivam   1603 Oct 19 16:56 isshit.txt
+-rw-r--r-- 1 shivam shivam   1465 Oct 19 16:52 ls2.txt
+-rw-r--r-- 1 shivam shivam   1581 Oct 19 16:53 lsthis.txt
+-rw-r--r-- 1 shivam shivam   1650 Oct 19 16:51 ls.txt
+-rwxrwxrwx 1 shivam shivam  13978 Oct 19 17:00 myshell
+-rw-r--r-- 1 shivam shivam   3851 Oct 19 17:00 myshell.c
+-rwxr-xr-x 1 shivam shivam    256 Oct  4 21:24 nice.txt
+-rwxrwxrwx 1 shivam shivam  14471 Oct  9 00:03 rls
+-rw-r--r-- 1 shivam shivam   4185 Oct 19 12:56 rls.c
+-rwxr-xr-x 1 shivam shivam     55 Oct 19 14:42 test.sh
+-rwxr-xr-x 1 shivam shivam  10881 Oct  4 21:24 test.txt
+real: 0.000000	user:0.000000	system0.000000
+Got here
+Executing command ls with argument " "
+a.out
+-b
+bad_copycat.c
+bitch.txt
+copycat.c
+createdright.txt
+dic.txt
+fag
+gay
+hello.txt
+hell.txt
+hope.txt
+isshit.txt
+ls2.txt
+lsthis.txt
+ls.txt
+myshell
+myshell.c
+nice.txt
+rls
+rls.c
+test.sh
+test.txt
+real: 0.000000	user:0.000000	system0.000000
