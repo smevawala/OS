@@ -11,7 +11,16 @@
 #include <sys/resource.h>
 extern int errno;
 
+int files_read;
 
+void sighand(int sig){
+	fprintf(stderr, "Amount of files read:%i\tAmount of bytes read in current file:%i\n",files_read-2,5); 
+	exit(1);
+}
+
+int fileread(char * filename, int fp){
+	return 0;
+}
 int execgrepmore(char *filepath, char *pattern){
     pid_t pidgrep,cpidgrep, pidmore, cpidmore;
   	char grepstr[8];
@@ -100,10 +109,10 @@ return 0;
 }
     
 int main (int argc, char **argv) {
-	int i;
 
-	for(i=2;i<argc;i++){
-		execgrepmore(argv[i],argv[1]);
+	signal(SIGINT, sighand);
+	for(files_read=2;files_read<argc;files_read++){
+		execgrepmore(argv[files_read],argv[1]);
 	}
 	return 0;
 }
