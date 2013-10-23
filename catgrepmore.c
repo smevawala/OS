@@ -19,16 +19,14 @@ void sighand(int sig){
 }
 
 int fileread(char * filepath, int fds){
-	int infp, wb, iread, buff=1024, over, sofar=0;
-	char rb[1024];
+	int infp, wb, iread, buff=1024,sofar=0;
+	char *rb[1024];
+
 	if ((infp=open(filepath,O_RDONLY))<0){
 		perror("File opening error");
 		return 1;
 	}
-	over=16*1024*1024;
-	over = over-1024;
-	printf("%i\n",over);
-	while((iread=read(infp,rb,buff))>0 && sofar<over){
+	while((iread=read(infp,rb,buff))>0 && sofar<65536){
 		wb=write(fds,rb,iread);
 		if(wb<0){
 			perror("Write failure");
@@ -36,11 +34,9 @@ int fileread(char * filepath, int fds){
 		else if(wb<iread){
 			perror("Partial write");
 		}
-		sofar=sofar+wb;
-		printf("%i\n",sofar);
 		bytes_written=bytes_written+wb;
+		sofar=sofar+wb;
 	}
-
 	if(close(infp)<0){
 		perror("File closing error");
 	}
@@ -59,8 +55,7 @@ int execgrepmore(char *filepath, char *pattern){
     commandg[2]=NULL;
     commandm[0]="more";
     commandm[1]=NULL;
-
-
+    
     if(pipe(fdsfile)<0){
     	perror("Cannot create pipe");
     	return 1;
@@ -69,10 +64,8 @@ int execgrepmore(char *filepath, char *pattern){
     	perror("Cannot create pipe");
     	return 1;
     }
-	printf("file to  be read\n");
 	if((fileread(filepath,fdsfile[1]))==1)
-		return 1;
-	printf("file read\n");	
+		return 1;	
 	if(close(fdsfile[1])<0)
 		perror("Pipe closing  error");
 
@@ -96,6 +89,8 @@ int execgrepmore(char *filepath, char *pattern){
 				perror("Pipe closing  error");	
 			if(close(fdsi[1])<0)
 				perror("Pipe closing  error");
+			if(close(fdsi[0])<0)
+				perror("Pipe closing  error");			
 		
     		break;
 
