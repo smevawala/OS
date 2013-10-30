@@ -35,6 +35,7 @@ int fileread(char * filepath, int fds){
 		wb=write(fds,rb,iread);
 		if(wb<0){
 			perror("Write failure");
+			return 1;
 		}
 		else if(wb<iread){
 			perror("Partial write");
