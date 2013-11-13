@@ -11,14 +11,6 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT "3490"  // the port users will be connecting to
-
-#define BACKLOG 10     // how many pending connections queue will hold
-
-void sigchld_handler(int s)
-{
-    while(waitpid(-1, NULL, WNOHANG) > 0);
-}
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -29,6 +21,8 @@ void *get_in_addr(struct sockaddr *sa)
 
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
+int connect(int sockfd, struct sokcaddr * serv_addr, int addrlen );
+
 
 int main(void)
 {
