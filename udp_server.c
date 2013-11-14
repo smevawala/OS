@@ -1,3 +1,6 @@
+//Shivam Mevawala
+//udp_server.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -36,18 +39,7 @@ int main(int argc, char ** argv){
 		return -1;
 	}
 
-	char * hostname;
-	// inet_ntop(sender.ss_family, &(((struct sockaddr_in *)&sender)->sin_addr), buf, sizeof buf );
-	// struct hostent *addr;
-	// addr=gethostbyaddr(buf, sizeof buf, AF_INET);
-	// if(addr==NULL){
-	// 	// herror(" ");
-	// 	// return -1;
-	// } 
-	// else{
-	// 	hostname=addr->h_name;
-	// }
-	int rc,wc;
+	int rc;
 	char rb[1024], t[512], u[512];
 	time_t start;
 	while(1){
