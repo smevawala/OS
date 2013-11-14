@@ -11,28 +11,21 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 
 int main(int argc, char ** argv){
-	// char * hostname;
 	int port, sd, sd2, fd, len;
+	char buf[INET6_ADDRSTRLEN];
 
-	// hostname = argv[1];
 	port=atoi(argv[1]);
-	// printf("%s\n",hostname);
-	// if(!isdigit(hostname[0])){
-	// 	struct hostent *addr;
-	// 	addr=gethostbyname(hostname); 
-	// 	hostname=inet_ntoa(*((struct in_addr *)addr->h_addr));
 
-	// }
-	// printf("%s\n",hostname);
 	if((sd=socket(AF_INET, SOCK_STREAM, 0))<0){
 		perror("socket error");
 		return -1;
 	}
-	// struct in_addr inaddr;
-	// inaddr.s_addr
+
 	struct sockaddr_in sockaddr;
+	struct sockaddr_storage sender;
 	sockaddr.sin_family=AF_INET;
 	sockaddr.sin_addr.s_addr=INADDR_ANY;
 	sockaddr.sin_port=htons(port);
@@ -46,20 +39,38 @@ int main(int argc, char ** argv){
 		perror("listen error");
 		return -1;
 	}
-	if((sd2=accept(sd,(struct sockaddr *) &sockaddr, &len))<0){
+
+	if((sd2=accept(sd,(struct sockaddr *) &sender, &len))<0){
 		perror("accept error");
 		return -1;
 	}
-
-	int rc,wc;
+	char * hostname;
+	inet_ntop(sender.ss_family, &(((struct sockaddr_in *)&sender)->sin_addr), buf, sizeof buf );
+	printf("%s\n", buf);
+	struct hostent *addr;
+	addr=gethostbyaddr(buf, sizeof buf, AF_INET);
+	if(addr==NULL){
+		herror(" ");
+	} 
+	else{
+		hostname=addr->h_name;
+		// printf("%s\n",hostname);
+	}
+	int rc,wc, totalc=0;
 	char rb[1024];
+	clock_t start=clock();
 	while((rc=read(sd2, rb, 1024))>0){
-	wc=write(1,rb, 1024);
+	wc=write(1,rb, rc);
+	totalc=totalc+wc;
 	if(wc<0)
 		perror("write error");
 	}
 	if(rc<0)
 		perror("read error");
+	clock_t end=clock();
 	close(sd);
 	close(sd2);
+	fprintf(stderr,"\n\n--------------------------------------------------------\nTotal bytes sent: %i B\nThroughput is %f MB/S",totalc,((totalc)/(((double)end-(double)start)/CLOCKS_PER_SEC))/1000000);
+	fprintf(stderr,"hostname is %s\n", hostname);
+	return 0;
 }

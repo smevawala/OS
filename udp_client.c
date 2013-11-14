@@ -14,12 +14,12 @@
 #include <time.h>
 
 int main(int argc, char ** argv){
-	char * hostname;
+	char * hostname, * command;
 	int port, sd;
 
 	hostname = argv[1];
 	port=atoi(argv[2]);
-	printf("%s\n",hostname);
+	command=argv[3];
 	if(!isdigit(hostname[0])){
 		struct hostent *addr;
 		if(!(addr=gethostbyname(hostname))){
@@ -27,38 +27,29 @@ int main(int argc, char ** argv){
 			return -1;
 		} 
 		hostname=inet_ntoa(*((struct in_addr *)addr->h_addr));
-
 	}
-	printf("%s\n",hostname);
 	sd=socket(PF_INET, SOCK_DGRAM, 0);
 	if(sd<0){
 		perror("socket error");
 		return -1;
 	}
-
 	struct sockaddr_in sockaddr;
 	sockaddr.sin_family=PF_INET;
 	sockaddr.sin_addr.s_addr=inet_addr(hostname);
 	sockaddr.sin_port=htons(port);
-
-	// if(bind(sd,(struct sockaddr *)&sockaddr,sizeof sockaddr)<0){
-	// 	perror("bind error");
-	// 	close(sd);
-	// 	return -1;
-	// }
-	int rc,wc,totalc=0;
-	char rb[1024];
-	clock_t start=clock();
-	while((rc=read(0, rb, 1024))>0){
-	wc=sendto(sd,rb, rc, 0, (struct sockaddr *)sockaddr.sin_addr.s_addr, sizeof sockaddr.sin_addr.s_addr);
-	totalc = totalc+rc;
+	int wc, len = sizeof sockaddr;
+	wc=sendto(sd,command, sizeof command, 0, (struct sockaddr *)&sockaddr, len);
 	if(wc<0)
-		perror("write error");
+		perror("send error");
+	char * s;
+	s=(char *)malloc(512);
+	if(s==NULL){
+		perror("malloc");
+		return -1;
 	}
-	clock_t end=clock();	
-	if(rc<0)
-		perror("read error");
+	if((recvfrom(sd, s, sizeof s, 0,(struct sockaddr *)&sockaddr, &len))<0)
+		perror("recieve error");
+	printf("%s\n",s);
 	close(sd);
-	fprintf(stderr,"\n\n--------------------------------------------------------\nTotal bytes sent: %i B\nThroughput is %f MB/S",totalc,((totalc)/(((double)end-(double)start)/CLOCKS_PER_SEC))/1000000);
 	return 0;
 }
