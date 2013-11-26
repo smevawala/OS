@@ -46,13 +46,13 @@ void sem_wait(struct sem *s){
 			// printf("waiting with procnum:%i\n",my_procnum);
 			s->waiting[my_procnum]=1;
 			s->semqueue[my_procnum]=getpid();
-			s->lock=0;
 			sigset_t mask;
 	     	sigfillset (&mask);
 	 		sigdelset (&mask, SIGUSR1);
 	 		sigdelset (&mask, SIGINT);
 		    sigprocmask (SIG_BLOCK, &mask, NULL);
 			signal(SIGUSR1, sighand);	
+			s->lock=0;
 		    sigsuspend (&mask);
 			sigprocmask (SIG_UNBLOCK, &mask, NULL);
 		}
