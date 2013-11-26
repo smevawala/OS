@@ -22,11 +22,8 @@ void fifo_wr(struct fifo *f, unsigned long d){
 }
 
 unsigned long fifo_rd(struct fifo *f){
-	// printf("num 1\n");
 	sem_wait(&(f->s_r));
-	// printf("num 2\n");
 	sem_wait(&(f->s_a));
-	// printf("num 3\n");
 	unsigned long d=f->ds[f->r];
 	f->r=(f->r+1)%MYBUFFSIZE;
 	sem_inc(&(f->s_w));

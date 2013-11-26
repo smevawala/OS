@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
 	    		exit(1);
 	    		break;
     		case 0:
-    			// printf("i:%i\tj:%i\n",i,j);
     			my_procnum=i;
     			for(j=0; j<numLong; j++){
     				unsigned long d = (j << 6) + i;
@@ -42,11 +41,6 @@ int main(int argc, char **argv) {
    		}	
 
 	}
-
-	// for(j=0; j<numLong*numProc; j++){
-	// 	r=fifo_rd(f);
-	// 	printf("read from process:%lu, seq num:%lu\n",(r&63),r>>6);
-	// }
 
 
 }
