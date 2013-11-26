@@ -4,9 +4,12 @@
 #include <unistd.h>
 #include <fcntl.h> 
 #include <string.h> 
+// #include <errno.h> 
 #include <sys/mman.h>
 #include <sys/types.h>
+// #include <sys/stat.h>
 #include <sys/wait.h>
+// #include <sys/resource.h>
 #include <signal.h>
 #define N_PROC 64
 
