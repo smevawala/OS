@@ -5,10 +5,10 @@
 #include <time.h>
 
 int main(){
-	int n;
+	int n, iterations=900000000;
 	struct timespec tStart, tEnd, diff;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tStart);
-	for(n=0;n<900000000;n++){
+	for(n=0;n<iterations;n++){
 		getuid();
 	}
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tEnd);
@@ -19,6 +19,8 @@ int main(){
 		diff.tv_sec = tEnd.tv_sec-tStart.tv_sec;
 		diff.tv_nsec = tEnd.tv_nsec-tStart.tv_nsec;
 	}
-	printf("%ld.%ld seconds\n",diff.tv_sec,diff.tv_nsec);
+	printf("%ld.%ld seconds for %i interations\n",diff.tv_sec,diff.tv_nsec, iterations);
+	double pi=((double)diff.tv_sec*((double)1000000000)+(double)diff.tv_nsec)/((double)iterations);
+	printf("%f nanoseconds per interation\n",pi);
 	return 0;
 }
