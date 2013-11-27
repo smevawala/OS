@@ -1,0 +1,4 @@
+execve("./a.out", ["./a.out"], [/* 94 vars */]) = 0
+write(1, "Hello world!\n", 13)          = 13
+_exit(1)                                = ?
++++ exited with 1 +++
