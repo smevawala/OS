@@ -1,4 +1,3 @@
-#Shivam Mevawala Assembly problem 3
 .text                           # section declaration
 
 
@@ -6,18 +5,16 @@
 
 
 _start:
-#sys_write
+
+                                # write our string to stdout
+
 	  movq    $1,%rax            # system call number (sys_write)
 	  movq    $1,%rdi             # first argument: file handle (stdout)
 	  movq    $msg,%rsi           # second argument: pointer to message to write
 	  movq    $length,%rdx          # third argument: message length
-	  syscall               		# call kernel
+	  syscall               # call kernel
 
                                 # and exit
-
-	  movq    $60,%rax             # system call number (sys_exit)
-	  movq    $1,%rdi             # first argument: exit code
-	  syscall             # call kernel
 
 .data                           # section declaration
 

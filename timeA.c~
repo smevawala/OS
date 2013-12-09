@@ -1,4 +1,3 @@
-//Shivam Mevawala Assembly problem 5 empty loop
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
