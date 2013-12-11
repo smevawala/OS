@@ -24,6 +24,8 @@ struct sched_proc {
 	int priority;
 	int accumulated;
 	time_t cpu_time;
+	void * stack_addr;
+	
 };
 struct sched_waitq {
 /* use this for each event/wakeup queue */

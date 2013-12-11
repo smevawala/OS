@@ -13,6 +13,7 @@ stack) at location init_fn. This function is not
 expected to return and if it does so it is OK to
 have unpredictable results.
 */
+	
 }
 
 int sched_fork()
