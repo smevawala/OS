@@ -3,8 +3,8 @@
 
 sigset_t mask;
 struct sched_proc * process;
-struct sched_proc proc_list[SCHED_NPROC+1];
-
+struct sched_proc * proc_list[SCHED_NPROC+2];
+int tickwindow=0, tickcount=0;
 void sched_tick(int i);
 
 void sched_init(void (*init_fn)()) {
@@ -21,14 +21,12 @@ void sched_init(void (*init_fn)()) {
 	*/
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGVTALRM);
-	sigprocmask(SIG_BLOCK, &mask, NULL);
 	signal(SIGVTALRM,sched_tick);
 	struct itimerval timer;
 	timer.it_value.tv_sec=0;
 	timer.it_value.tv_usec=100000;
 	timer.it_interval.tv_sec=0;
 	timer.it_interval.tv_usec=100000;
-	setitimer(ITIMER_VIRTUAL, &timer,NULL);
 	process = (struct sched_proc *) malloc(sizeof(struct sched_proc));
 
 	
@@ -37,19 +35,24 @@ void sched_init(void (*init_fn)()) {
 	process->pid=1;
 	process->ppid=1;
 	process->priority=10;
+	process->state=SCHED_RUNNING;
 	void *newsp;
 	if ((newsp=mmap(0,STACK_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,0,0))==MAP_FAILED){
 		perror("mmap failed");
 	}
 	process->stack_addr=newsp;
+	proc_list[process->pid]=process;
+
 	struct savectx ctx;
 	ctx.regs[JB_SP]=process->stack_addr+STACK_SIZE;
 	ctx.regs[JB_BP]=process->stack_addr+STACK_SIZE;
 	ctx.regs[JB_PC]=init_fn;
+	process->ctx=ctx;
 
+	sigprocmask(SIG_BLOCK, &mask, NULL);
+	setitimer(ITIMER_VIRTUAL, &timer,NULL);
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 	restorectx(&ctx, 0);
-
 		
 }
 
@@ -67,17 +70,52 @@ int sched_fork() {
 	new private stack area for the child and initialize it to be
 	a copy of the parent’s. See below for discussion on stacks.
 	*/
+	sigprocmask(SIG_BLOCK, &mask, NULL);
+	int newpid=find_lowest_pid();
+	printf("newpid is %i\n",newpid);
+	struct sched_proc * newprocess;
+	newprocess = (struct sched_proc *) malloc(sizeof(struct sched_proc));
+	newprocess->ppid=process->pid;
+	newprocess->pid=newpid;
+	newprocess->priority=process->priority;
+	newprocess->state=SCHED_READY;
+	void *newsp;
+	if ((newsp=mmap(0,STACK_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,0,0))==MAP_FAILED){
+		perror("mmap failed");
+		return -1;
+	}
+	memcpy(newsp, process->stack_addr, STACK_SIZE);
+	adjstack(newsp, newsp+STACK_SIZE, newsp-process->stack_addr);
+	// struct savectx ctx;
+	// ctx.regs[JB_SP]=newprocess->stack_addr+STACK_SIZE;
+	// ctx.regs[JB_BP]=newprocess->stack_addr+STACK_SIZE;
+	// newprocess->ctx=ctx;
+	// process=newprocess;
+	proc_list[newpid]=newprocess;
+	if(savectx(&(newprocess->ctx))==0){
+		newprocess->ctx.regs[JB_SP] += newsp - process->stack_addr;
+		newprocess->ctx.regs[JB_BP] += newsp - process->stack_addr;
+		sigprocmask(SIG_UNBLOCK, &mask, NULL);
+		return newpid;
+	}
+
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
     return 0;
 }
 
-int sched_exit(int code) {
+void sched_exit(int code) {
 	/* Terminate the current task, making it a ZOMBIE, and store
 	the exit code. If a parent is sleeping in sched_wait(),
 	wake it up and return the exit code to it.
 	There will be no equivalent of SIGCHLD. sched_exit
 	will not return. Another runnable process will be scheduled.
 	*/
-    return 0;
+	sigprocmask(SIG_BLOCK, &mask, NULL);
+
+
+
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
 }
 int sched_wait(int *exit_code) {
 	/* Return the exit code of a zombie child and free the
@@ -92,6 +130,36 @@ int sched_wait(int *exit_code) {
 	Since there are no simulated signals, the exit code
 	is simply the integer from sched_exit().
 	*/
+	sigprocmask(SIG_BLOCK, &mask, NULL);
+
+	int i;
+	int ccount=0;
+	int pids[SCHED_NPROC];
+
+	for(i=2;i<SCHED_NPROC-2;i++){
+		if(proc_list[i]->ppid==process->pid){
+			if(proc_list[i]->state==SCHED_ZOMBIE){
+				*exit_code = proc_list[i]->exit_code;
+				sigprocmask(SIG_UNBLOCK, &mask, NULL);
+				return *exit_code;
+			}
+			else{
+				pids[ccount]=proc_list[i]->pid;
+				ccount++;
+			}
+		}
+	}
+	if(ccount==0){
+		sigprocmask(SIG_UNBLOCK, &mask, NULL);
+		return -1;
+	}
+	else{
+		printf("going to sleep\n");
+		process->state=SCHED_SLEEPING;
+		sched_switch();
+	}
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
     return 0;
 }
 void sched_nice(int niceval) {
@@ -100,6 +168,11 @@ void sched_nice(int niceval) {
 	priority) to -20 (most preferred). Clamp any out-of-range
 	values to those limits
 	*/
+	if(niceval>20)
+		niceval=20;
+	else if(niceval<0)
+		niceval=0;
+
 	process->priority=niceval;
 }
 
@@ -114,8 +187,7 @@ int sched_getppid() {
 
 int sched_gettick() {
 	/* return the number of timer ticks since startup */
-	
-    return 0;
+    return tickcount+tickwindow;
 }
 void sched_ps() {
 	/* output to stdout a listing of all of the current tasks,
@@ -147,6 +219,31 @@ void sched_switch() {
 	(unless, of course, the best task is also the current task)
 	See discussion below on support routines for context switch.
 	*/
+	printf("starting switching\n");
+	//find pid to switch to
+	int i;
+	for(i=0;i<SCHED_NPROC+2;i++){
+		if(proc_list[i]!=NULL){
+			if(proc_list[i]->state==SCHED_READY){
+				printf("i = %i\n",i);
+				break;
+			}
+		}
+	}
+	if(i!=SCHED_NPROC+1){
+		printf("i = %i\n",i);
+		// struct savectx cur_ctx;
+		process->state=SCHED_READY;
+		// cur_ctx=process->ctx;
+		proc_list[i]->state=SCHED_RUNNING;
+		if(savectx(&(process->ctx))==0){
+			process=proc_list[i];
+			sigprocmask(SIG_UNBLOCK, &mask, NULL);
+			restorectx(&(process->ctx), 1);
+		}
+			sigprocmask(SIG_UNBLOCK, &mask, NULL);
+	}
+
 }
 void sched_tick(int i) {
 	/* This is the suggested name of a required routine which will
@@ -163,4 +260,22 @@ void sched_tick(int i) {
 	mask issues...remember SIGVTALARM will, by default,
 	be masked on entry to your signal handler.
 	*/
+	printf("tick\n");
+	tickwindow++;
+	if(tickwindow>14){
+		tickcount=+tickwindow;
+		tickwindow=0;
+		printf("clearing tickcount\n");
+		sched_switch();
+	}
+}
+
+int find_lowest_pid(){
+	int i=0;
+	for(i=1;i<SCHED_NPROC+2;i++){
+		if(proc_list[i]==NULL)
+			break;
+	}	
+	return i;
+
 }

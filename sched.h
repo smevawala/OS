@@ -14,12 +14,12 @@
 #include "savectx64.h"
 #include "jmpbuf-offsets64.h"
 
-#define SCHED_NPROC 64 // (maximum pid)-1, up to you but >=256
+#define SCHED_NPROC 256 // (maximum pid)-1, up to you but >=256
 /* Suggested task state values */
-#define SCHED_READY XXX
-#define SCHED_RUNNING XXX
-#define SCHED_SLEEPING XXX
-#define SCHED_ZOMBIE XXX
+#define SCHED_READY 0
+#define SCHED_RUNNING 1
+#define SCHED_SLEEPING 2
+#define SCHED_ZOMBIE 3
 #define STACK_SIZE 65536
 
 
@@ -31,12 +31,14 @@ struct sched_proc {
 	/* probably should include things like the task state */
 	/* priority, accumulated, cpu time, stack address, etc. */
 	int priority;
+	int state;
 	int accumulated;
 	unsigned long cpu_time;
 	void * stack_addr;
 	int pid;
 	// struct sched_proc * parent;
 	int ppid;
+	int exit_code;
 	struct savectx ctx;
 };
 
@@ -47,6 +49,17 @@ struct sched_waitq {
 
 void sched_init(void (*init_fn)());
 
+int sched_fork();
+
 int sched_getppid();
 
 void sched_nice(int niceval);
+
+void sched_exit(int code);
+
+void sched_switch();
+
+int find_lowest_pid();
+
+
+void adjstack(void *lim0,void *lim1,unsigned long adj);

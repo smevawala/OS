@@ -9,7 +9,7 @@
  *could be commented out if needed.
  */
 
-adjstack(void *lim0,void *lim1,unsigned long adj)
+void adjstack(void *lim0,void *lim1,unsigned long adj)
 {
  void **p;
  void *prev,*new;
