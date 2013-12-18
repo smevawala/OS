@@ -57,6 +57,8 @@ void sched_nice(int niceval);
 
 void sched_exit(int code);
 
+int sched_wait(int *exit_code);
+
 void sched_switch();
 
 int find_lowest_pid();

@@ -4,6 +4,7 @@
 sigset_t mask;
 struct sched_proc * process;
 struct sched_proc * proc_list[SCHED_NPROC+2];
+int * return_codes[SCHED_NPROC+2];
 int tickwindow=0, tickcount=0;
 void sched_tick(int i);
 
@@ -112,8 +113,12 @@ void sched_exit(int code) {
 	*/
 	sigprocmask(SIG_BLOCK, &mask, NULL);
 
-
-
+	process->state=SCHED_ZOMBIE;
+	if(proc_list[process->ppid]->state=SCHED_SLEEPING){
+		proc_list[process->ppid]->state=SCHED_READY;
+		return_codes[process->ppid]=(int *)malloc(sizeof(int));
+		*return_codes[process->ppid]=code;
+	}
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
 }
