@@ -1,4 +1,5 @@
 #include "sched.h"
+#include <limits.h>
 
 
 sigset_t mask;
@@ -217,6 +218,15 @@ void sched_ps() {
 	    dynamic priority
 	    total CPU time used (in ticks)
 	*/
+
+	printf("pid \t ppid \t state \t Stack BP \t Wait Queue \t S_P \t D_P \t CPU \n");
+	printf("--- \t ---- \t ----- \t -------- \t ---------- \t --- \t --- \t --- \n");
+	int n;
+	for (n = 1; n < SCHED_NPROC; n++){
+		if (proc_list[n] != NULL){
+			printf("%i \t %i \t %i\t %p \t %p \t %i \t %lu \t %lu \n",proc_list[n]-> pid, proc_list[n]-> ppid, proc_list[n]-> state, proc_list[n]-> stack_addr, proc_list[n], proc_list[n]-> priority, (proc_list[n]-> priority +proc_list[n]->cpu_time), proc_list[n]->cpu_time);
+		}
+	}
 	/* You should establish sched_ps() as the signal handler
 	for SIGABRT so that a ps can be forced at any
 	time by sending the testbed SIGABRT */
@@ -236,23 +246,27 @@ void sched_switch() {
 	*/
 	printf("starting switching\n");
 	//find pid to switch to
-	int i;
+	int i, n;
+	int min = INT_MAX;
 	for(i=0;i<SCHED_NPROC+2;i++){
 		if(proc_list[i]!=NULL){
 			if(proc_list[i]->state==SCHED_READY){
 				printf("i = %i\n",i);
-				break;
+				if(min>(proc_list[i]->priority +proc_list[i]->cpu_time)){
+					min=(proc_list[i]->priority +proc_list[i]->cpu_time);
+					n=i;
+				}
 			}
 		}
 	}
 	if(i!=SCHED_NPROC+1){
-		printf("i = %i\n",i);
+		printf("n = %i\n",n);
 		// struct savectx cur_ctx;
 		process->state=SCHED_READY;
 		// cur_ctx=process->ctx;
-		proc_list[i]->state=SCHED_RUNNING;
+		proc_list[n]->state=SCHED_RUNNING;
 		if(savectx(&(process->ctx))==0){
-			process=proc_list[i];
+			process=proc_list[n];
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 			restorectx(&(process->ctx), 1);
 		}
@@ -275,7 +289,8 @@ void sched_tick(int i) {
 	mask issues...remember SIGVTALARM will, by default,
 	be masked on entry to your signal handler.
 	*/
-	printf("tick\n");
+	// printf("tick\n");
+	process->cpu_time+=1;
 	tickwindow++;
 	if(tickwindow>14){
 		tickcount=+tickwindow;

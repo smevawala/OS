@@ -37,7 +37,7 @@ void child1()
  		}
  		
  	}
- 	sched_exit(1);
+ 	sched_exit(85);
  }
 void child2()
 {
@@ -52,7 +52,7 @@ void child2()
  		}
  		
  	}
- 	sched_exit(2);
+ 	sched_exit(20);
  }
  
 void parent()
