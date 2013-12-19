@@ -142,11 +142,17 @@ int sched_wait(int *exit_code) {
 	int pids[SCHED_NPROC];
 
 	for(i=2;i<SCHED_NPROC-2;i++){
-		if(proc_list[i]->ppid==process->pid){
+		if(proc_list[i]!= NULL && proc_list[i]->ppid==process->pid){
 			if(proc_list[i]->state==SCHED_ZOMBIE){
-				*exit_code = proc_list[i]->exit_code;
+				exit_code = return_codes[process->pid];
+				if (munmap(proc_list[i]->stack_addr, STACK_SIZE) == -1){
+					perror("Failed to unmap ");
+					break;
+				}
+				free(proc_list[i]);
+				proc_list[i] = NULL;
 				sigprocmask(SIG_UNBLOCK, &mask, NULL);
-				return *exit_code;
+				return 0;
 			}
 			else{
 				pids[ccount]=proc_list[i]->pid;
@@ -154,7 +160,7 @@ int sched_wait(int *exit_code) {
 			}
 		}
 	}
-	if(ccount==0){
+	if(ccount==0){//no child
 		sigprocmask(SIG_UNBLOCK, &mask, NULL);
 		return -1;
 	}
@@ -162,6 +168,10 @@ int sched_wait(int *exit_code) {
 		printf("going to sleep\n");
 		process->state=SCHED_SLEEPING;
 		sched_switch();
+		exit_code = return_codes[process->pid];
+		munmap(proc_list[pids[0]]->stack_addr, STACK_SIZE);
+		free(proc_list[pids[0]]);
+		proc_list[pids[0]] = NULL;
 	}
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
