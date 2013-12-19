@@ -115,14 +115,15 @@ void sched_exit(int code) {
 	will not return. Another runnable process will be scheduled.
 	*/
 	sigprocmask(SIG_BLOCK, &mask, NULL);
-	printf("making zombie\n");
+
 	process->state=SCHED_ZOMBIE;
 	if(proc_list[process->ppid]->state=SCHED_SLEEPING){
 		proc_list[process->ppid]->state=SCHED_READY;
 		return_codes[process->ppid]=(int *)malloc(sizeof(int));
 		*return_codes[process->ppid]=code;
 	}
-	sched_switch();
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
 }
 int sched_wait(int *exit_code) {
 	/* Return the exit code of a zombie child and free the
@@ -170,14 +171,13 @@ int sched_wait(int *exit_code) {
 		printf("going to sleep\n");
 		process->state=SCHED_SLEEPING;
 		sched_switch();
-		//printf("exit code is %i\n\n",*return_codes[process->pid]);
-		*exit_code = *return_codes[process->pid];
+		exit_code = return_codes[process->pid];
 		munmap(proc_list[pids[0]]->stack_addr, STACK_SIZE);
 		free(proc_list[pids[0]]);
 		proc_list[pids[0]] = NULL;
 	}
 	sigprocmask(SIG_UNBLOCK, &mask, NULL);
-	//sched_ps();
+
     return 0;
 }
 void sched_nice(int niceval) {
@@ -229,7 +229,6 @@ void sched_ps() {
 			printf("%i \t %i \t %i\t %p \t %p \t %i \t %lu \t %lu \n",proc_list[n]-> pid, proc_list[n]-> ppid, proc_list[n]-> state, proc_list[n]-> stack_addr, proc_list[n], proc_list[n]-> priority, (proc_list[n]-> priority +proc_list[n]->cpu_time), proc_list[n]->cpu_time);
 		}
 	}
-	return;
 	/* You should establish sched_ps() as the signal handler
 	for SIGABRT so that a ps can be forced at any
 	time by sending the testbed SIGABRT */
@@ -247,7 +246,6 @@ void sched_switch() {
 	(unless, of course, the best task is also the current task)
 	See discussion below on support routines for context switch.
 	*/
-	sched_ps();
 	printf("starting switching\n");
 	//find pid to switch to
 	int i, n;
@@ -268,16 +266,15 @@ void sched_switch() {
 		// struct savectx cur_ctx;
 		process->state=SCHED_READY;
 		// cur_ctx=process->ctx;
+		proc_list[n]->state=SCHED_RUNNING;
 		if(savectx(&(process->ctx))==0){
-			proc_list[n]->state=SCHED_RUNNING;
 			process=proc_list[n];
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 			restorectx(&(process->ctx), 1);
 		}
-		else
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 	}
-	return;
+
 }
 void sched_tick(int i) {
 	/* This is the suggested name of a required routine which will

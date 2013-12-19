@@ -1,7 +1,28 @@
-//Shivam Mevawala
+/*Benjamin Schenker
+ * Dec 9, 2013
+ * PS 9
+ * testbed.c
+ * ECE357*/
  
  #include "sched.h"
 
+/*
+This initializes the scheduler with init_fn, which then forks twice (one child becomes 
+nice and the other is inconsiderate) and continues to do its own thing, then waits for 
+both its children and exits. 
+
+Each process counts to a very high number and prints some information ten times 
+throughout the process.
+
+This has been designed such that
+pid 1 will fork twice then start counting
+then pid 2 will do its whole job (uninterrupted)
+then pid 3 will do a very small amount before
+pid 1 interrupts it and finishes
+pid 3 will then take its time to finish (with many interruptions)
+
+each pid does the same task so it should take the same amount of time per task.
+*/
 
 void child1()
 {

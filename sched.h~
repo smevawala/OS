@@ -1,3 +1,5 @@
+//Shivam Mevawala
+//OS scheduler
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
